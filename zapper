@@ -1,0 +1,35 @@
+#!/bin/bash
+
+exit_error() {
+    echo -e "\e[1m\e[31mVeuillez installer '${1}' pour utiliser cette application\e[0m"
+    exit 0
+}
+
+! type whiptail >/dev/null 2>&1 && exit_error "whiptail"
+! type curl >/dev/null 2>&1 && exit_error "curl"
+! type vlc >/dev/null 2>&1 && exit_error "vlc"
+
+curl -LSso playlist mafreebox.freebox.fr/freeboxtv/playlist.m3u
+sed -i -e '1d' playlist
+sed -e 's/.* - //' playlist > chaines
+sed -i -e '/rtsp.*/d' chaines
+mapfile -t lines < chaines
+
+menu() {
+    list=("Q" "Quitter" "" ""); i=0
+    for ch in "${lines[@]}"; do
+	i=$(($i+1))
+	list+=("$i" "$ch ")
+    done
+
+    ENTRIES=$(whiptail --title "Liste des chaînes TV" --menu --nocancel "" 20 60 14 "${list[@]}" 3>&2 2>&1 1>&3)
+
+    case "${ENTRIES}" in
+	Q) killall vlc; exit 0;;
+	([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|1000) chaine=$(($ENTRIES*2)); \
+	    killall vlc &>/dev/null; url=$(sed -n "${chaine}p" playlist); nohup cvlc $url &>/dev/null &;;
+	*) menu;;
+    esac
+}
+
+menu; ./freebox-zap
