@@ -2,18 +2,18 @@
 
 exit_error() {
     echo -e "\e[1m\e[31mVeuillez installer '${1}' pour utiliser cette application\e[0m"
-    exit 0
+    exit 1
 }
 
 ! type whiptail >/dev/null 2>&1 && exit_error "whiptail"
 ! type curl >/dev/null 2>&1 && exit_error "curl"
 ! type vlc >/dev/null 2>&1 && exit_error "vlc"
 
-curl -LSso playlist mafreebox.freebox.fr/freeboxtv/playlist.m3u
-sed -i -e '1d' playlist
-sed -e 's/.* - //' playlist > chaines
-sed -i -e '/rtsp.*/d' chaines
-mapfile -t lines < chaines
+curl -LSso .playlist mafreebox.freebox.fr/freeboxtv/playlist.m3u
+sed -i -e '1d' .playlist
+sed -e 's/.* - //' .playlist > .chaines
+sed -i -e '/rtsp.*/d' .chaines
+mapfile -t lines < .chaines
 
 menu() {
     list=("Q" "Quitter" "" ""); i=0
@@ -27,9 +27,9 @@ menu() {
     case "${ENTRIES}" in
 	Q) killall vlc; exit 0;;
 	([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|1000) chaine=$(($ENTRIES*2)); \
-	    killall vlc &>/dev/null; url=$(sed -n "${chaine}p" playlist); nohup cvlc $url &>/dev/null &;;
+	    killall vlc &>/dev/null; url=$(sed -n "${chaine}p" .playlist); cvlc $url &>/dev/null &;;
 	*) menu;;
     esac
 }
 
-menu; ./freebox-zap
+menu; ./zapper
