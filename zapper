@@ -25,11 +25,12 @@ menu() {
     ENTRIES=$(whiptail --title "Liste des chaînes TV" --menu --nocancel "" 20 60 14 "${list[@]}" 3>&2 2>&1 1>&3)
 
     case "${ENTRIES}" in
-	Q) killall vlc; exit 0;;
+	Q) killall vlc >&/dev/null; exit 0;;
 	([0-9]|[0-9][0-9]|[0-9][0-9][0-9]|1000) chaine=$(($ENTRIES*2)); \
 	    killall vlc &>/dev/null; url=$(sed -n "${chaine}p" .playlist); cvlc $url &>/dev/null &;;
 	*) menu;;
     esac
 }
 
-menu; ./zapper
+parent_path=$(cd "$(dirname "${BASH_SOURCE}")"; pwd -P)
+menu; $parent_path/zapper
